@@ -121,16 +121,14 @@ void main(void)
 void serialPrintBlocking (uint8_t * pString)
 {
 	IE1 &= ~UTXIE0;							// Disable USART0 RX/TX interrupt
-	IFG1 |= UTXIFG0;						// Set interrupt flag
 
 	while(*pString)
 	{
-		while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 		U0TXBUF = *pString;					// Write next char to buffer
 		pString++;
+		while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 	}
 
-	IFG1 &= ~UTXIFG0;						// Clear interrupt flag
 	IE1 |= UTXIE0;							// Enable USART0 RX/TX interrupt
 }
 
@@ -149,19 +147,12 @@ void introMessage (void)
 	serialPrintBlocking((uint8_t*)INTRO_1);
 	serialPrintBlocking((uint8_t*)INTRO_2);
 	serialPrintBlocking((uint8_t*)VERSION_INFO);
-	while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 	serialPrintBlocking((uint8_t*)COMPILE_VERSION);
-	while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 	serialPrintBlocking((uint8_t*)", ");
-	while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 	serialPrintBlocking((uint8_t*)CREATED_INFO);
-	while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 	serialPrintBlocking((uint8_t*)COMPILE_DATE);
-	while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 	serialPrintBlocking((uint8_t*)", ");
-	while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 	serialPrintBlocking((uint8_t*)COMPILE_TIME);
-	while (!(IFG1 & UTXIFG0));			// Block until TX interrupt flag set
 	serialPrintBlocking((uint8_t*)"\r\n");
 }
 
@@ -314,12 +305,15 @@ __interrupt void USART0_TX_ISR (void)
 			U0TXBUF = *pMsg;				// Write byte
 			pMsg++;							// Index to next byte in string
 		}
-	}
 
-	pMsg = 0;								// Reset pointer to null in case
+		else
+		{
+			pMsg = 0;						// Reset pointer to null in case
 											//   ISR gets called again after
 											//   completion of string, but
 											//   before a new string is assigned
+		}
+	}
 }
 
 
